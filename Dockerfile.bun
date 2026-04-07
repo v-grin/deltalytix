@@ -41,14 +41,24 @@ COPY . .
 ARG DIRECT_URL
 ARG DATABASE_URL
 ARG OPENAI_API_KEY
+ARG STRIPE_SECRET_KEY
+ARG RESEND_API_KEY
+ARG GITHUB_TOKEN
 RUN set -eux; \
     export DIRECT_URL="${DIRECT_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
     export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
     export OPENAI_API_KEY="${OPENAI_API_KEY:-build-placeholder-openai-key}"; \
+    export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_build_placeholder}"; \
+    export RESEND_API_KEY="${RESEND_API_KEY:-re_build_placeholder}"; \
+    export GITHUB_TOKEN="${GITHUB_TOKEN:-ghp_build_placeholder}"; \
     echo "DIRECT_URL provided: $([ -n "${DIRECT_URL}" ] && echo yes || echo no)"; \
     echo "DATABASE_URL provided: $([ -n "${DATABASE_URL}" ] && echo yes || echo no)"; \
     echo "OPENAI_API_KEY provided: $([ -n "${OPENAI_API_KEY}" ] && echo yes || echo no)"; \
-    bun run build
+    echo "STRIPE_SECRET_KEY provided: $([ -n "${STRIPE_SECRET_KEY}" ] && echo yes || echo no)"; \
+    echo "RESEND_API_KEY provided: $([ -n "${RESEND_API_KEY}" ] && echo yes || echo no)"; \
+    bun x ts-node scripts/generate-routes.ts; \
+    bun x prisma generate; \
+    bun x next build
 
 # Production image, copy all the files and run next
 FROM base AS runner
