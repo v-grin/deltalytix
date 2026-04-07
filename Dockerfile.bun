@@ -37,11 +37,18 @@ COPY . .
 # ENV NEXT_TELEMETRY_DISABLED=1
 #
 # prisma.config.ts requires DIRECT_URL at build-time for `prisma generate`.
-# Provide safe defaults for CI image builds; runtime values are still injected
-# by the deployment platform (Dokploy).
-ARG DIRECT_URL=postgresql://postgres:postgres@localhost:5432/postgres?schema=public
-ARG DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres?schema=public
-RUN DIRECT_URL="${DIRECT_URL}" DATABASE_URL="${DATABASE_URL}" bun run build
+# Keep build robust even when CI secrets are unavailable (e.g. fork PRs).
+ARG DIRECT_URL
+ARG DATABASE_URL
+ARG OPENAI_API_KEY
+RUN set -eux; \
+    export DIRECT_URL="${DIRECT_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
+    export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
+    export OPENAI_API_KEY="${OPENAI_API_KEY:-build-placeholder-openai-key}"; \
+    echo "DIRECT_URL provided: $([ -n "${DIRECT_URL}" ] && echo yes || echo no)"; \
+    echo "DATABASE_URL provided: $([ -n "${DATABASE_URL}" ] && echo yes || echo no)"; \
+    echo "OPENAI_API_KEY provided: $([ -n "${OPENAI_API_KEY}" ] && echo yes || echo no)"; \
+    bun run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
