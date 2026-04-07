@@ -8,7 +8,9 @@ import { User } from "@supabase/supabase-js"
 const MAINTENANCE_MODE = false
 
 const I18nMiddleware = createI18nMiddleware({
-  locales: ["en", "fr", "de", "es", "it", "pt", "vi", "hi", "ja", "zh", "yo"],
+  // Keep this list in sync with locales/server.ts and locales/client.ts
+  // to avoid runtime crashes when a non-existent locale module is requested.
+  locales: ["en", "fr"],
   defaultLocale: "en",
   urlMappingStrategy: "rewrite",
 })
