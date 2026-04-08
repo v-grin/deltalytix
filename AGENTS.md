@@ -19,6 +19,16 @@ Use this file as a fast operational guide for Codex agents making code changes.
 - Lint: `npm run lint`
 - Typecheck: `npm run typecheck`
 
+## Docker Build Rule
+- Always build containers with real values from `.env`.
+- Never rely on Dockerfile fallback placeholders for Supabase/Auth/Stripe/OpenAI keys.
+- Required at build time at minimum:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `DATABASE_URL`
+  - `DIRECT_URL`
+- Before any `docker build`/`docker compose up --build`, verify these vars are set in `.env` and passed into build args/env.
+
 ## Env Model
 - Runtime DB uses `DATABASE_URL` (`lib/prisma.ts`).
 - Prisma CLI uses `DIRECT_URL` (`prisma.config.ts`).
