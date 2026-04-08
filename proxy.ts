@@ -9,8 +9,7 @@ const MAINTENANCE_MODE = false
 
 const I18nMiddleware = createI18nMiddleware({
   // Keep this list in sync with locales/server.ts and locales/client.ts
-  // to avoid runtime crashes when a non-existent locale module is requested.
-  locales: ["en", "fr", "ru"],
+  locales: ["en", "fr"],
   defaultLocale: "en",
   urlMappingStrategy: "rewrite",
 })
@@ -94,6 +93,14 @@ async function updateSession(request: NextRequest) {
 
 export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
+
+  // Legacy compatibility: old RU links should not crash i18n resolution.
+  // Keep localization source-of-truth as en/fr and remap stale ru links.
+  if (pathname === "/ru" || pathname.startsWith("/ru/")) {
+    const url = req.nextUrl.clone()
+    url.pathname = pathname === "/ru" ? "/en" : `/en${pathname.slice(3)}`
+    return NextResponse.redirect(url)
+  }
 
   // More specific static asset exclusions - must be first!
   if (
