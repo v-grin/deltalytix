@@ -74,3 +74,43 @@ jobs:
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY != '' && secrets.STRIPE_SECRET_KEY || 'sk_test_build_placeholder' }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY != '' && secrets.RESEND_API_KEY || 're_build_placeholder' }}
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN != '' && secrets.GITHUB_TOKEN || 'ghp_build_placeholder' }}
+
+  deploy-dokploy:
+    name: Trigger Dokploy Deploy
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger Dokploy webhook
+        env:
+          DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DOKPLOY_DEPLOY_WEBHOOK:-}" ]; then
+            echo "::error::Missing DOKPLOY_DEPLOY_WEBHOOK secret in repository settings."
+            exit 1
+          fi
+
+          echo "Triggering Dokploy deployment webhook..."
+
+          # Try POST first (common webhook pattern), then fallback to GET.
+          if curl --fail --show-error --silent --location \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 3 \
+            --retry-all-errors \
+            -X POST "${DOKPLOY_DEPLOY_WEBHOOK}"; then
+            echo "Dokploy webhook accepted via POST."
+            exit 0
+          fi
+
+          echo "POST failed, trying GET..."
+          curl --fail --show-error --silent --location \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 3 \
+            --retry-all-errors \
+            "${DOKPLOY_DEPLOY_WEBHOOK}"
+          echo "Dokploy webhook accepted via GET."
