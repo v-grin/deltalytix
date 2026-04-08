@@ -4,7 +4,7 @@ import { createClient } from '@/server/auth'
 import { cookies } from 'next/headers'
 import { PrismaClient } from '@/prisma/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { stripe } from '@/server/stripe'
+import { stripe, isStripeConfigured } from '@/server/stripe'
 import Stripe from 'stripe'
 
 const adapter = new PrismaPg({
@@ -76,6 +76,9 @@ export async function getSubscriptionData() {
     })
 
     if (localSubscription && localSubscription.status === 'ACTIVE' && localSubscription.interval === 'lifetime') {
+      if (!isStripeConfigured) {
+        return createLifetimeSubscriptionData(localSubscription, [])
+      }
 
       // Get customer and invoices for lifetime subscription
       const customers = await stripe.customers.list({
@@ -178,6 +181,11 @@ export async function getSubscriptionData() {
       }
 
       return createLifetimeSubscriptionData(localSubscription, invoices.data)
+    }
+
+    // Self-hosted mode: Stripe key is optional. If it's not configured, skip remote billing checks.
+    if (!isStripeConfigured) {
+      return null
     }
 
     // SECOND: Check for active Stripe subscription (recurring plans)

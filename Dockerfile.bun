@@ -44,6 +44,8 @@ ARG OPENAI_API_KEY
 ARG STRIPE_SECRET_KEY
 ARG RESEND_API_KEY
 ARG GITHUB_TOKEN
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 RUN set -eux; \
     export DIRECT_URL="${DIRECT_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
     export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres?schema=public}"; \
@@ -51,6 +53,8 @@ RUN set -eux; \
     export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_build_placeholder}"; \
     export RESEND_API_KEY="${RESEND_API_KEY:-re_build_placeholder}"; \
     export GITHUB_TOKEN="${GITHUB_TOKEN:-ghp_build_placeholder}"; \
+    export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://build-placeholder.supabase.co}"; \
+    export NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-sb_publishable_build_placeholder}"; \
     echo "DIRECT_URL provided: $([ -n "${DIRECT_URL}" ] && echo yes || echo no)"; \
     echo "DATABASE_URL provided: $([ -n "${DATABASE_URL}" ] && echo yes || echo no)"; \
     echo "OPENAI_API_KEY provided: $([ -n "${OPENAI_API_KEY}" ] && echo yes || echo no)"; \

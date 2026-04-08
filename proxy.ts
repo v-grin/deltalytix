@@ -10,7 +10,7 @@ const MAINTENANCE_MODE = false
 const I18nMiddleware = createI18nMiddleware({
   // Keep this list in sync with locales/server.ts and locales/client.ts
   // to avoid runtime crashes when a non-existent locale module is requested.
-  locales: ["en", "fr"],
+  locales: ["en", "fr", "ru"],
   defaultLocale: "en",
   urlMappingStrategy: "rewrite",
 })

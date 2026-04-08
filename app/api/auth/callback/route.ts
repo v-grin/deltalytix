@@ -21,6 +21,15 @@ export async function GET(request: Request) {
     action
   })
 
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const originUrl = new URL(origin)
+  const host = forwardedHost || originUrl.host
+  const hostname = host.split(':')[0]
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0'
+  const protocol = isLocalHost ? 'http' : (forwardedProto || originUrl.protocol.replace(':', '') || 'https')
+  const baseOrigin = `${protocol}://${host}`
+
   // Redirect to the decoded 'next' URL if it exists, otherwise to the homepage
   let decodedNext: string | null = null;
   if (next) {
@@ -34,22 +43,14 @@ export async function GET(request: Request) {
       if (!error) {
         // Handle password recovery redirect
         if (type === 'recovery') {
-          const forwardedHost = request.headers.get('x-forwarded-host')
-          const isLocalEnv = process.env.NODE_ENV === 'development'
-          const baseUrl = isLocalEnv
-            ? `${origin}/dashboard/settings`
-            : `https://${forwardedHost || origin}/dashboard/settings`
+          const baseUrl = `${baseOrigin}/dashboard/settings`
           const redirectUrl = `${baseUrl}?passwordReset=true`
           return NextResponse.redirect(redirectUrl)
         }
 
         // Handle identity linking redirect
         if (action === 'link') {
-          const forwardedHost = request.headers.get('x-forwarded-host')
-          const isLocalEnv = process.env.NODE_ENV === 'development'
-          const baseUrl = isLocalEnv
-            ? `${origin}/dashboard/settings`
-            : `https://${forwardedHost || origin}/dashboard/settings`
+          const baseUrl = `${baseOrigin}/dashboard/settings`
           const redirectUrl = `${baseUrl}?linked=true`
           return NextResponse.redirect(redirectUrl)
         }
@@ -65,25 +66,10 @@ export async function GET(request: Request) {
           // Non-fatal: continue redirect
         }
 
-        const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-        const isLocalEnv = process.env.NODE_ENV === 'development'
-        if (isLocalEnv) {
-          // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-          if (decodedNext) {
-            return NextResponse.redirect(new URL(decodedNext, origin))
-          }
-          return NextResponse.redirect(`${origin}${next ?? '/dashboard'}`)
-        } else if (forwardedHost) {
-          if (decodedNext) {
-            return NextResponse.redirect(new URL(decodedNext, `https://${forwardedHost}`))
-          }
-          return NextResponse.redirect(`https://${forwardedHost}${next ?? '/dashboard'}`)
-        } else {
-          if (decodedNext) {
-            return NextResponse.redirect(new URL(decodedNext, origin))
-          }
-          return NextResponse.redirect(`${origin}${next ?? '/dashboard'}`)
+        if (decodedNext) {
+          return NextResponse.redirect(new URL(decodedNext, baseOrigin))
         }
+        return NextResponse.redirect(`${baseOrigin}${next ?? '/dashboard'}`)
       } else {
         console.log('Auth callback error:', error)
       }

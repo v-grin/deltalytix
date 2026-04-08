@@ -3,6 +3,11 @@ import createMDX from '@next/mdx';
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {
+    // Avoid Turbopack scanning parent directories when extra lockfiles exist
+    // (e.g. ~/bun.lock), which can cause EMFILE watcher errors locally.
+    root: __dirname,
+  },
   // cacheComponents: true, // Enable Cache Components (Next.js 16+)
   images: {
     remotePatterns: [
