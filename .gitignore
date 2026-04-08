@@ -65,3 +65,6 @@ datafeeds/
 
 # Lock files
 *.lock
+
+# private local notes
+Documents/private-local-prod-architecture.md
