@@ -14,6 +14,8 @@ concurrency:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    outputs:
+      image_tags: ${{ steps.meta.outputs.tags }}
     permissions:
       contents: read
       packages: write
@@ -75,6 +77,20 @@ jobs:
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY != '' && secrets.RESEND_API_KEY || 're_build_placeholder' }}
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN != '' && secrets.GITHUB_TOKEN || 'ghp_build_placeholder' }}
 
+      - name: Log published image tags
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Published image tags:"
+          printf '%s\n' "${{ steps.meta.outputs.tags }}"
+
+          {
+            echo "## Published GHCR Tags"
+            echo
+            echo '```text'
+            printf '%s\n' "${{ steps.meta.outputs.tags }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   deploy-dokploy:
     name: Trigger Dokploy Deploy
     needs: docker
@@ -82,6 +98,20 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+      - name: Log image tags for Dokploy deploy
+        run: |
+          echo "Dokploy will deploy the latest available image from GHCR tags:"
+          printf '%s\n' "${{ needs.docker.outputs.image_tags }}"
+
+          {
+            echo "## Dokploy Deploy Trigger"
+            echo
+            echo "Webhook triggered for tags:"
+            echo '```text'
+            printf '%s\n' "${{ needs.docker.outputs.image_tags }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Trigger Dokploy webhook
         env:
           DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
