@@ -55,7 +55,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
 
       - name: Build and (optionally) push image
         uses: docker/build-push-action@v6
@@ -70,14 +70,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            DIRECT_URL=${{ secrets.DIRECT_URL != '' && secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/postgres?schema=public' }}
-            DATABASE_URL=${{ secrets.DATABASE_URL != '' && secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres?schema=public' }}
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY != '' && secrets.OPENAI_API_KEY || 'build-placeholder-openai-key' }}
-            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY != '' && secrets.STRIPE_SECRET_KEY || 'sk_test_build_placeholder' }}
-            RESEND_API_KEY=${{ secrets.RESEND_API_KEY != '' && secrets.RESEND_API_KEY || 're_build_placeholder' }}
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN != '' && secrets.GITHUB_TOKEN || 'ghp_build_placeholder' }}
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://build-placeholder.supabase.co' }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_build_placeholder' }}
+            DIRECT_URL=${{ vars.DIRECT_URL != '' && vars.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/postgres?schema=public' }}
+            DATABASE_URL=${{ vars.DATABASE_URL != '' && vars.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres?schema=public' }}
+            OPENAI_API_KEY=${{ vars.OPENAI_API_KEY != '' && vars.OPENAI_API_KEY || 'build-placeholder-openai-key' }}
+            STRIPE_SECRET_KEY=${{ vars.STRIPE_SECRET_KEY != '' && vars.STRIPE_SECRET_KEY || 'sk_test_build_placeholder' }}
+            RESEND_API_KEY=${{ vars.RESEND_API_KEY != '' && vars.RESEND_API_KEY || 're_build_placeholder' }}
+            GITHUB_TOKEN=${{ vars.GITHUB_TOKEN != '' && vars.GITHUB_TOKEN || github.token }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' && vars.NEXT_PUBLIC_SUPABASE_URL || 'https://build-placeholder.supabase.co' }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' && vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_build_placeholder' }}
 
       - name: Log published image tags
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -116,12 +116,12 @@ jobs:
 
       - name: Trigger Dokploy webhook
         env:
-          DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+          DOKPLOY_DEPLOY_WEBHOOK: ${{ vars.DOKPLOY_DEPLOY_WEBHOOK }}
         run: |
           set -euo pipefail
 
           if [ -z "${DOKPLOY_DEPLOY_WEBHOOK:-}" ]; then
-            echo "::error::Missing DOKPLOY_DEPLOY_WEBHOOK secret in repository settings."
+            echo "::error::Missing DOKPLOY_DEPLOY_WEBHOOK variable in repository settings."
             exit 1
           fi
 
