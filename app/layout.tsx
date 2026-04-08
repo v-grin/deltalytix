@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { connection } from "next/server";
 import { ScrollLockFix } from "@/components/scroll-lock-fix";
@@ -287,8 +285,6 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <ScrollLockFix />
-        <SpeedInsights />
-        <Analytics />
         {children}
       </body>
     </html>

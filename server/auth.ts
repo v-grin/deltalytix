@@ -7,10 +7,16 @@ import { headers } from "next/headers"
 import { User } from '@supabase/supabase-js'
 
 export async function getWebsiteURL() {
-  let url =
-    process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
-    process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel.
-    'http://localhost:3000/'
+  const envCandidates = [
+    process?.env?.NEXT_PUBLIC_SITE_URL, // Preferred production URL
+    process?.env?.NEXT_PUBLIC_APP_URL, // Backward-compatible env name used in some setups
+    process?.env?.NEXT_PUBLIC_BASE_URL,
+    process?.env?.NEXT_PUBLIC_VERCEL_URL, // Automatically set by Vercel
+  ]
+
+  let url = envCandidates.find(
+    candidate => typeof candidate === 'string' && candidate.trim().length > 0
+  ) ?? 'http://localhost:3000/'
   // Make sure to include `https://` when not localhost.
   url = url.startsWith('http') ? url : `https://${url}`
   // Make sure to include a trailing `/`.
